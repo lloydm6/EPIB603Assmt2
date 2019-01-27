@@ -1,0 +1,396 @@
+---
+title: "lab 2 2019 Q"
+author: "J Brophy"
+date: "Winter 2019"
+output:
+  html_document:
+    css: lab.css
+    highlight: tango
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+<div id="instructions">
+From mycourses download the file `lab 2 2019 Q.Rmd` and also the css file (for formatting purposes) `lab.css`. In RStudio Open the document and complete this exercise. Submit answers using R Markdown, first **save as XXXXXXXXX.Rmd where XXXXXXXXX is your McGill student ID. Then when you knit the file it will create a html file called XXXXXXXXX.html that you will submit**. Enter your answers in the appropriate R code chunks or text answers in the box following the **Type your answer here:**. Submit one html file per pair.
+
+Grading is based on the points allocated for each question and an extra 5 points for overall style, organization, and clarity. Marks per question are indicated in each question. 
+
+</div>
+
+## Basic epidemiologic operations 
+
+This lab is to build on your familarity with data manipulation and data visualization and to introduce the use of some common epidemiological packages
+
+## Questions 1  - 13 points
+
+One advantage to using R is that there are often several ways to solve a problem. Consider data from a classic 1970 RCT that showed increased mortality with the drug tolbutamide compared to placebo. The data is as follows;![Table](UGDP.png) 
+
+
+<div id="exercise">
+**Q 1**:      
+a) Enter the above data into R as a matrix with row and column names, save and display it. (5 points)      
+b) Calculate the risk, odds, risk ratio, and odds ratio **without** using any **epi packages** (5 points)            
+c) Comment briefly on the risk ratio and odds ratio for tolbutamide (3 points) 
+</div>
+
+```{r}
+# enter your code here
+
+q1.data <- data.frame(deaths = c(30, 21), survivors = c(174, 187), row.names = c("Tolbutamide", "Plaebo"))
+q1.data <- as.table(as.matrix(q1.data))
+
+q1.data
+
+q1.Trisk <- q1.data[1,1]/sum(q1.data[1,1:2])
+q1.Trisk
+
+q1.Prisk <- q1.data[2,1]/sum(q1.data[2,1:2])
+q1.Prisk
+
+q1.RR <- round(q1.Trisk/q1.Prisk, 2)
+
+q1.OR <- round((q1.data[1,1]/q1.data[1,2])/(q1.data[2,1]/q1.data[2,2]), 2)
+
+#just checking the by hand stuff
+library(epiR)
+epi.2by2(q1.data, method = "cohort.count")
+
+```
+
+<div id="body">
+**Type your answer here:** 
+The risk ration is `q1.RR` and the odds ratio is higher at `r q1.OR`. The prevalence f disease (ie: death) in this study is pretty high (over 10%) so the rare disease assumption does not hold and the RR are OR are different.
+
+Is this for the next question? There is an increased risk shown for both effect measures (1 point), although neither is statistically significant (1 point). The risk ratio and odds ratio are similar as the outcome is not too common.
+</div>
+
+## Questions 2 - 10 points
+<div id="exercise">
+**Q2**: Calculate the 95% CI for the risk ratio, again *without* using any **epi packages**. Hint - easiest to work in logs and recall the equation for the SE from baby Rothman page 135 is $$SE[ln(RR)] = \sqrt{\dfrac{1}{a} - \dfrac{1}{N_t} + \dfrac{1}{b} - \dfrac{1}{N_0}}$$ (10 points)
+</div>
+
+```{r}
+# enter your code here
+#juuuust checking
+log(exp(1))
+
+#get the SE[ln(RR)]
+q2.lnSE <- sqrt((1/q1.data[1,1]) - (1/sum(q1.data[1, 1:2])) + (1/q1.data[2,1]) - (1/sum(q1.data[2, 1:2])))
+
+#gotta stay on dat ln the the very end. After all the calcs, get off my ln
+q2.RR.95CI <- exp(log(q1.RR) - qnorm(c(0.025, 0.975))*q2.lnSE)
+
+```
+
+## Question 3 - 15 points
+Much easier to use some of the epi packages (**provided you enter the data in the right format for each package, may need to refer to help section for each package**)
+<div id="exercise">
+**Q3** Using the same dataset            
+a) Calculate the risk ratio and its 95% CI using  `epi2X2()`  in the `epibasix` package. (5 points)     
+b) Repeat using  `epitab()` in the `epitools` package (5 points)            
+c) Repeat using  `epi.2by2()` in the `epiR` package (5 points)     
+</div>
+
+```{r}
+# enter your code here
+
+#install.packages("epibasix")
+library(epibasix)
+q3.epi2x2 <- summary(epi2x2(q1.data))
+
+#install.packages("epitools")
+library(epitools)
+q3.epitab <- epitab(q1.data,  method = "riskratio", rev = "both")
+
+#a rr and CI
+q3.epi.2by2 <- epi.2by2(q1.data, method = "cohort.count")
+
+
+#testing to see if I get the same suff...i don't 
+#testdata <- cbind(c(100, 225), c(58, 45))
+#summary(epi2x2(testdata))
+#testdata
+#test.RR <- (100/(100+58))/(225/(225+45))
+#test.lnSE <- sqrt((1/testdata[1,1]) - (1/sum(testdata[1, 1:2])) + (1/testdata[2,1]) + (1/sum(testdata[2, 1:2])))
+
+#gotta stay on dat ln the the very end. After all the calcs, get off my ln
+#test.RR.95CI <- exp(log(test.RR) + qnorm(c(0.025, 0.975))*test.lnSE)
+#epi.2by2(testdata, method = "cohort.count")
+
+```
+
+
+```{r message=FALSE, eval=FALSE, echo=FALSE}
+# example not used here but could be used elsehere as needed
+library(MASS)
+dat1 <- birthwt; head(dat1)
+## Generate a table of cell frequencies. First set the levels of the outcome
+## and the exposure so the frequencies in the 2 by 2 table come out in the
+## conventional format:
+dat1$low <- factor(dat1$low, levels = c(1,0))
+dat1$smoke <- factor(dat1$smoke, levels = c(1,0))
+dat1$race <- factor(dat1$race, levels = c(1,2,3))
+## Generate the 2 by 2 table. Exposure (rows) = smoke. Outcome (columns) = low.
+tab1 <- table(dat1$smoke, dat1$low, dnn = c("Smoke", "Low BW"))
+print(tab1)
+## Compute the incidence risk ratio and other measures of association:
+epi.2by2(dat = tab1, method = "cohort.count",
+   conf.level = 0.95, units = 100,  homogeneity = "breslow.day",
+   outcome = "as.columns")
+
+```
+
+
+## Questions 4 - 15 points
+Most often we are working not with summary data as above but with individual observations and need to generate our own frequency tables.    
+
+The Pima Indians dataset describes the medical records for Pima Indians and whether or not each patient will have an onset of diabetes within five years. Fields description follow:
+
+* Pregnancies = Number of times pregnant        
+* Glucose = Plasma glucose concentration a 2 hours in an oral glucose tolerance test     
+* BloodPressure = Diastolic blood pressure (mm Hg)     
+* SkinThickness = Triceps skin fold thickness (mm)     
+* Insulin = 2-Hour serum insulin (mu U/ml)      
+* BMI = Body mass index (weight in kg/(height in m)^2)    
+* DiabetesPedigreeFunction = Diabetes pedigree function      
+* Age = Age (years)     
+* Outcome = Class variable (1:tested positive for diabetes, 0: tested negative for diabetes)
+
+The datset is available on [Kaggle](https://www.kaggle.com/kumargh/pimaindiansdiabetescsv) but can also be found in mycourses. Remember good programming style places the datsets in a separate data subfolder of your working directory.
+
+<div id="exercise">
+**Q4**          
+a) Read in the data set (2 points)                         
+b) Shorten the variable names to `c('preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class')` & print the first 5 rows of the data frame (3 points)                        
+c) Create a 2X2 summary table of outcome `class` (diabetes). How many cases are there in the dataset? (2 points)    
+d) Create a 2X2 summary table of outcome `class` (diabetes) versus `mass` where mass is dichotmoized at the median. How many cases of diabetes have high BMI? (5 points) 
+d) Use `epi.2by2` to calculate the measures of association for this table. What is the risk ratio and the 95% CI (5 points)     
+**Be sure that you construct the 2X2 table in the format required by `epi.2by2`. Failure to do so, as I initially did when constructing the question, will lead to the wrong answer. Thanks to Dr. Lopes for catching this error.**
+</div>
+```{r }
+# enter your code here
+setwd("/Users/macbook/Documents/McGill School/EPIB 603/EPIB 603 Assignment 2/")
+q4.data.pima <- read.csv("603A3 data/pima_diabetes.csv")
+
+colnames(q4.data.pima) <- c('preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class')
+head(q4.data.pima, 5)
+str(q4.data.pima)
+
+#create a 2x2 table with 1 variable?! That's a 1x2
+table(q4.data.pima$class)
+
+table(q4.data.pima$class, q4.data.pima$preg)
+
+
+library(dplyr)
+
+#create a dichotomous variable for mass, spliting on median, check next notes for logic of multiple entries at median
+str(q4.data.pima)
+q4.data.pima$mass.class <- cut(q4.data.pima$mass, c(-Inf, median(q4.data.pima$mass), Inf), labels = c("low", "high"))
+
+#checking to see how many mass = median. There are more in the low side, there are 13 in totall, and low group has 4 more, so it makes more sense to keep them all in the low as opposed to arbitrarilly splitting them up or giving all to high (which would make group delta n = 9). 
+count(q4.data.pima, var = mass.class)
+length(q4.data.pima[q4.data.pima$mass == 32, 6])
+#Also, a lot with bmi = 0. Cut them out? I didn't yet.
+q4.data.pima[q5.data.pima$mass == 0, ]
+
+#making a 2x2 in the correct config for epi.2by2
+q4.tab <- table(q4.data.pima$mass.class, q4.data.pima$class)
+q4.tab <- q4.tab[c(2,1),]
+q4.tab <- q4.tab[,c(2,1)]
+colnames(q4.tab) <- c("dia.pos", "dia.neg")
+q4.tab
+
+q4.2by2 <- epi.2by2(q4.tab, method = "cohort.count")
+q4.RR.CI <- round(q4.2by2$res$RR.strata.wald, 3)
+
+```
+<div id="body">
+**Type your answer here:** How many cases are there in the dataset? How many cases of diabetes have high BMI? What is the risk ratio and the 95% CI for the association between BMI & diabetes?
+
+There is a total of 268 cases of diabetes in the dataset. Where "high" BMI > 32, there are 179 cases of diabetes with high BMI. The RR is 2.03 with a 95% CI of 1.65, 2.51.
+
+ </div>
+
+## Question 5 - 18 points  
+Use `ggplot2` package, although base `R` also hase functions to display the data. (2 points for each question)
+<div id="exercise">
+**Q5**      
+a) Change values in the class variable from 0, 1 to `negative` and `positive` and assign to a new variable `class.fac`         
+b) Create a pie chart of the class variable (in real life there is probably rarely an indication for a pie chart)   
+c) Create a bar plot for the age variable      
+d) Create a density plot for the preg variable     
+e) Create a histogram for the preg variable    
+f) Create a boxplot for the age against class.fac     
+g) Create a normal QQ plot and a line which passes through the first and third quartiles      
+h) Create a scatter plot for the variables age against the mass variable        
+i) Create scatter plots for every independent variable of the data set against every other independent variable (hint use `GGally::ggpairs()`)
+</div>
+
+```{r message=FALSE, warning=FALSE}
+# enter your code here
+
+q5.data.pima <- q4.data.pima
+q5.data.pima$class <- factor(q5.data.pima$class, labels = c("negative", "positive"), levels = c(0,1))
+head(q5.data.pima)
+
+q5.class.df <- as.data.frame(table(q5.data.pima$class))
+q5.class.df
+
+
+library(ggplot2)
+# found a bunch of this on stack overflow, it looks like there ain't be no dang geom_pie, so you do a bar chart and polar coord it
+q5.pie.plot <- ggplot(q5.class.df, aes(x = "", y = Freq, fill = Var1)) + 
+  geom_bar(stat = "identity") + 
+  coord_polar("y") +     
+  geom_text(aes(label = round(Freq)), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Members of the Pima Nation with Diabetes") +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    theme_classic() +
+    theme(axis.line = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          plot.title = element_text(hjust = 0.5))
+q5.pie.plot
+
+#create a bar plot for the age variable. 
+q5.bar.plot <- ggplot(q5.data.pima, aes(age)) +
+  geom_bar(fill = "blue") +
+  labs(x = "Age", y = "Count", fill = NULL, title = "Age of Adult Members of the Pima Nation in Database") +
+  theme_classic()
+q5.bar.plot
+
+#d) Create a density plot for the preg variable     
+q5.dens.plot <- ggplot(q5.data.pima, aes(preg)) +
+  geom_density(fill = "lightblue") +
+  geom_vline(xintercept = mean(q5.data.pima$preg), col = "red") +
+  labs(x = "Number of Lifetime Pregnancies", y = "Density", fill = NULL, title = "Density Plot of Number of Pregnancies of Members of the Pima Nation in Database") +
+  annotate("text", label = paste("Mean Number of Pregnancies =", round(mean(q5.data.pima$preg), 2)), x = 10, y = 0.1, col = "red")
+q5.dens.plot
+
+#e) Create a histogram for the preg variable    
+q5.hist.plot <- ggplot(q5.data.pima, aes(preg)) +
+  geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
+  labs(x = "Number of Lifetime Pregnancies", y = "Count", fill = NULL, title = "Number of Pregnancies of Members of the Pima Nation in Database")
+q5.hist.plot  
+  
+#f) Create a boxplot for the age against class.fac     
+q5.box.plot <- ggplot(q5.data.pima, aes(y = age, x = class, fill = class)) +
+  geom_boxplot() +
+  labs(x = "Diabetes Status", y = "Age", fill = NULL, title = "Diabetes Status of Members of the Pima Nation by Age") +
+  guides(fill = FALSE)
+q5.box.plot
+
+#g) Create a normal QQ plot and a line which passes through the first and third quartiles
+#what variable?!
+q5.normqq.plot <- ggplot(q5.data.pima, aes(sample = age)) +
+  geom_qq() + geom_qq_line(line.p = c(0.25, 0.75), col = "red") + 
+  labs(x = "Theoretical Age", y = "Sample Age", fill = NULL, title = "QQ Plot of Age of Members of the Pima Nation")
+q5.norm.plot
+
+q5.normqq.plot2 <- ggplot(q5.data.pima, aes(sample = preg)) +
+  geom_qq() + geom_qq_line(line.p = c(0.25, 0.75), col = "red") + 
+  labs(x = "Theoretical # Preg", y = "Sample # Preg", fill = NULL, title = "QQ Plot of # Pregnancies of Members of the Pima Nation")
+q5.norm.plot2
+
+q5.normqq.plot3 <- ggplot(q5.data.pima, aes(sample = mass)) +
+  geom_qq() + geom_qq_line(line.p = c(0.25, 0.75), col = "red") + 
+  labs(x = "Theoretical BMI", y = "Sample BMI", fill = NULL, title = "QQ Plot of BMI of Members of the Pima Nation")
+q5.norm.plot3
+
+head(q5.data.pima)
+
+#h) Create a scatter plot for the variables age against the mass variable  
+q5.scat.plot <- ggplot(q5.data.pima, aes(x = age, y = mass)) +
+  geom_point() +
+  labs(x = "Age", y = "BMI", fill = NULL, title = "Age vs BMI of Members of the Pima Nation")
+
+q5.scat.plot
+
+q5.data.pima[q5.data.pima$mass == 0, ]
+
+#i) Create scatter plots for every independent variable of the data set against every other independent variable (hint use `GGally::ggpairs()`). Which are independent? All except age? (also took out mass.class)
+
+install.packages("GGally")
+library(GGally)
+
+ggpairs(q5.data.pima, columns = c(1:7, 9))
+
+```
+
+## FYI Equivalent Base R graph functions
+
+```{r eval=FALSE}
+# pie chart 
+pie(table(data['class.fac']))
+# barplot 
+barplot(data[['age']])
+# density
+plot(density(data$preg))
+# histogram
+hist(data[['preg']])
+# boxplot
+boxplot(data[['age']] ~data[['class.fac']])
+# qnorm
+qqnorm(data[["age"]])
+qqline(data[["age"]])
+# scatter plot
+plot(data$age,data$mass)
+# scatter
+plot(data)
+
+```
+
+  
+
+```{r message=FALSE, eval=FALSE, echo=FALSE}
+
+### Q3 Perform basic descriptive stats (using R functions) (22 marks)
+
+* Find the mean of the mass variable    
+* Find the median of the mass variable     
+* Find the standard deviation of the mass variable    
+* Find the variance of the mass variable      
+* Find the interquartile range of the age variable      
+* Find the median absolute deviation of age variable, assuming follows a normal distribution     
+* Find the covariance of the variables age, mass     
+* Find the covariance of the variables age, mass **without** using the `cov` function    
+* Find the spearman and pearson correlations of the variables age, mass     
+* Print the summary statistics, and the structure of the data set        
+* Construct the spearman and pearson correlation matrix of the data set (HINT:use `rcorr` function in the `Hmisc` library and remove factor variables)      
+
+
+mean(data[['mass']])
+mean(data$mass)
+median(data[['mass']])
+median(data$mass)
+sd(data[["mass"]])
+var(data[["mass"]])
+IQR(data[["age"]])
+mad(data[['age']])
+cov(data$age,data$mass)
+num <- 0
+for (i in 1:length(data$age)){
+num <- num + (data$age[i] - mean(data$age)) * (data$mass[i]
+- mean(data$mass))
+}
+num/length(data$age)
+cor(data$age,data$mass,method  = "spearman")
+cor(data$age,data$mass,method = "pearson")
+summary(data)
+str(data)
+Hmisc::rcorr(as.matrix(data[-length(data)]),type = "spearman")
+Hmisc::rcorr(as.matrix(data[-length(data)]),type = "pearson")
+
+```
+
