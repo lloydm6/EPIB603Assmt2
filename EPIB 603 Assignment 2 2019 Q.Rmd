@@ -402,5 +402,6 @@ cor.matrix.spe <- rcorr(as.matrix(q4.data.pima[-length(q4.data.pima)]), type = "
 cor.matrix.pea <- rcorr(as.matrix(q4.data.pima[-length(q4.data.pima)]), type = "pearson")
 
 
+#adding stuff right at the end
 ```
 
