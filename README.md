@@ -12,3 +12,5 @@ finished 2nd question
 5th commit, finished q5 for the most part, though the last part of the q asks for independent variables and i just grabbed all but age. 
 
 6th commit, finally saving rmd with this...so hopefully I can see 2 verions in github, did the last question, which was just changing generic answers to my code. 
+
+7th, a quick small change, taking out the "install.packages()" in two places

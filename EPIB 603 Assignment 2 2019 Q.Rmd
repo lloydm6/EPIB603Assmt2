@@ -321,7 +321,7 @@ q5.data.pima[q5.data.pima$mass == 0, ]
 
 #i) Create scatter plots for every independent variable of the data set against every other independent variable (hint use `GGally::ggpairs()`). Which are independent? All except age? (also took out mass.class)
 
-install.packages("GGally")
+
 library(GGally)
 
 ggpairs(q5.data.pima, columns = c(1:7, 9))
@@ -396,7 +396,7 @@ sum.data <- summary(q5.data.pima)
 str.data <- str(q5.data.pima)
 
 #* Construct the spearman and pearson correlation matrix of the data set (HINT:use `rcorr` function in the `Hmisc` library and remove factor variables)      
-install.packages("Hmisc")
+
 library(Hmisc)
 cor.matrix.spe <- rcorr(as.matrix(q4.data.pima[-length(q4.data.pima)]), type = "spearman")
 cor.matrix.pea <- rcorr(as.matrix(q4.data.pima[-length(q4.data.pima)]), type = "pearson")
