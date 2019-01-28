@@ -357,40 +357,50 @@ plot(data)
 
 ### Q3 Perform basic descriptive stats (using R functions) (22 marks)
 
-* Find the mean of the mass variable    
-* Find the median of the mass variable     
-* Find the standard deviation of the mass variable    
-* Find the variance of the mass variable      
-* Find the interquartile range of the age variable      
-* Find the median absolute deviation of age variable, assuming follows a normal distribution     
-* Find the covariance of the variables age, mass     
-* Find the covariance of the variables age, mass **without** using the `cov` function    
-* Find the spearman and pearson correlations of the variables age, mass     
-* Print the summary statistics, and the structure of the data set        
-* Construct the spearman and pearson correlation matrix of the data set (HINT:use `rcorr` function in the `Hmisc` library and remove factor variables)      
+#* Find the mean of the mass variable    
+mass.mean <- mean(q5.data.pima$mass)
 
+#* Find the median of the mass variable     
+mass.med <- median(q5.data.pima$mass)
 
-mean(data[['mass']])
-mean(data$mass)
-median(data[['mass']])
-median(data$mass)
-sd(data[["mass"]])
-var(data[["mass"]])
-IQR(data[["age"]])
-mad(data[['age']])
-cov(data$age,data$mass)
+#* Find the standard deviation of the mass variable    
+mass.sd <- sd(q5.data.pima$mass)
+
+#* Find the variance of the mass variable      
+mass.var <- var(q5.data.pima$mass)
+
+#* Find the interquartile range of the age variable      
+age.IQR <- quantile(q5.data.pima$age)[4] - quantile(q5.data.pima$age)[2]
+
+#* Find the median absolute deviation of age variable, assuming follows a normal distribution     
+age.mad <- mad(q5.data.pima$age)
+
+#* Find the covariance of the variables age, mass     
+age.mass.cov <- cov(q5.data.pima$age, q5.data.pima$mass)
+
+#* Find the covariance of the variables age, mass **without** using the `cov` function    
 num <- 0
-for (i in 1:length(data$age)){
-num <- num + (data$age[i] - mean(data$age)) * (data$mass[i]
-- mean(data$mass))
+for (i in 1:length(q4.data.pima$age)){
+num <- num + (q4.data.pima$age[i] - mean(q4.data.pima$age)) * (q4.data.pima$mass[i]
+- mean(q4.data.pima$mass))
 }
-num/length(data$age)
-cor(data$age,data$mass,method  = "spearman")
-cor(data$age,data$mass,method = "pearson")
-summary(data)
-str(data)
-Hmisc::rcorr(as.matrix(data[-length(data)]),type = "spearman")
-Hmisc::rcorr(as.matrix(data[-length(data)]),type = "pearson")
+num/length(q4.data.pima$age)
+
+
+#* Find the spearman and pearson correlations of the variables age, mass     
+age.mass.cor.spe <- cor(q5.data.pima$age, q5.data.pima$mass, method  = "spearman")
+age.mass.cor.pea <- cor(q5.data.pima$age, q5.data.pima$mass, method = "pearson")
+
+#* Print the summary statistics, and the structure of the data set        
+sum.data <- summary(q5.data.pima)
+str.data <- str(q5.data.pima)
+
+#* Construct the spearman and pearson correlation matrix of the data set (HINT:use `rcorr` function in the `Hmisc` library and remove factor variables)      
+install.packages("Hmisc")
+library(Hmisc)
+cor.matrix.spe <- rcorr(as.matrix(q4.data.pima[-length(q4.data.pima)]), type = "spearman")
+cor.matrix.pea <- rcorr(as.matrix(q4.data.pima[-length(q4.data.pima)]), type = "pearson")
+
 
 ```
 
